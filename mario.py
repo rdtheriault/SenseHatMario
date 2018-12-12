@@ -11,9 +11,11 @@ sense.clear()
 
 # Edit these variables to change key game parameters
 mario_color = (255,0,0)      # 
-bg_color = (0,0,0)         # 
+bg_color = (0,0,0)          #
+O = bg_color
 gumba_color = (200,200,0)   # 
-floor_color = (102, 51, 0 )
+floor_color = (102, 51, 0 )   #
+G = floor_color
 pipe_color = (0,255,0)
 bird_y = 2                 # Where the player starts 
 mario_lives = 3             # How many lives does the bird get?
@@ -21,6 +23,7 @@ mario_size = 1       #
 jump = 3
 debug_mode = False
 loc = 0
+mario_vert = 0
 
 # Variables for convenience and readability
 up_key = sense_hat.DIRECTION_UP
@@ -43,15 +46,7 @@ def debug_message(message):
 
 
 #set up game board
-sense.set_pixel(0,7, floor_color)
-sense.set_pixel(1,7, floor_color)
-sense.set_pixel(2,7, floor_color)
-sense.set_pixel(3,7, floor_color)
-sense.set_pixel(4,7, floor_color)
-sense.set_pixel(5,7, floor_color)
-sense.set_pixel(6,7, floor_color)
-sense.set_pixel(7,7, floor_color)
-sense.set_pixel(1,6, mario_color)
+
 
 """
 # Get true color values for comparisons: get_pixel() sometimes returns different values
@@ -70,27 +65,29 @@ reset_state = (col_color, bg_color, bird_color, bird_y, bird_lives, columns, col
 # Game functions
 ####
 
-def move_column(dir):
+def draw_map(dir,map,map1rows):
   debug_message("Moving columns")
-  #global columns
+  global loc
+  global O
+  global G
+  move = True
   #starting_cols = len(columns)
   
+  #move columns based on direction check if at end/beg
   if dir == "right":
+    loc = loc +1
+  elif dir == "left":
+    if loc == 0:
+      move = False
+    else:
+      loc = loc -1
+  elif dir == "none":
+    move = False
   
+  for x in range(8):
+    for y in range(8):
+      sense.set_pixel(x,y, map[(x+loc)+(y*map1rows)])
   
-  for i in range(7):
-    for i in range(7):
-      
-  
-  # Shift x coordinate of colums to left
-  columns = [(c[0] -1, c[1], c[2]) for c in columns]
-
-  # Add a new column if needed
-  if max([c[0] for c in columns]) == 4:
-    gap_size = randint(2,4)
-    row_start = randint(1 + gap_size, 6)
-    columns.append((7,row_start,gap_size))
-
 """
 def draw_column(col, custom_color = None):
   debug_message("Drawing column")
@@ -220,13 +217,23 @@ while True:
     setup = True
 """
 
+
+
+
 map1 = [
-O, O, O, O, O, O, O, O, 
-O, O, O, O, O, O, O, O, 
-O, O, O, O, O, O, O, O, 
-O, O, O, O, O, O, O, O, 
-O, O, O, O, O, O, O, O, 
-O, O, O, O, G, G, O, O, 
-O, O, O, O, O, O, O, O, 
-G, G, G, G, G, G, G, G, G
+O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O,
+O, O, O, O, G, G, O, O, O,
+O, O, O, O, O, O, O, O, O,
+G, G, G, G, G, G, G, G, G,
 ]
+map1rows = 9
+
+draw_map("none",map1,map1rows)
+sense.set_pixel(1,6, mario_color)
+sleep(1)
+draw_map("right",map1,map1rows)
+sense.set_pixel(1,6, mario_color)
