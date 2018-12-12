@@ -17,13 +17,14 @@ gumba_color = (200,200,0)   #
 floor_color = (102, 51, 0 )   #
 G = floor_color
 pipe_color = (0,255,0)
-bird_y = 2                 # Where the player starts 
+P = pipe_color
 mario_lives = 3             # How many lives does the bird get?
 mario_size = 1       # 
-jump = 3
-debug_mode = False
+debug_mode = True
 loc = 0
-mario_vert = 0
+jump = 3
+mario_vert = 6
+jumping = False
 
 # Variables for convenience and readability
 up_key = sense_hat.DIRECTION_UP
@@ -44,66 +45,45 @@ def debug_message(message):
   if debug_mode:
     print(message)
 
-
-#set up game board
-
-
-"""
-# Get true color values for comparisons: get_pixel() sometimes returns different values
-sense.set_pixel(0,0, col_color)
-col_color = sense.get_pixel(0,0)
-sense.set_pixel(0,0, bg_color)
-bg_color = sense.get_pixel(0,0)
-sense.set_pixel(0,0, bird_color)
-bird_color = sense.get_pixel(0,0)
-sense.clear()
-
-# Save setup in a tuple to restart game
-reset_state = (col_color, bg_color, bird_color, bird_y, bird_lives, columns, column_speed_base, speed, game_over)
-"""
 ####
 # Game functions
 ####
 
-def draw_map(dir,map,map1rows):
-  debug_message("Moving columns")
+def draw_map(dir,map,maprows):
+  debug_message("(re)drawing map)")
   global loc
   global O
   global G
-  move = True
+  global P
+  move = collision_check(G,P,map,maprows)
   #starting_cols = len(columns)
-  
+  debug_message(move)
   #move columns based on direction check if at end/beg
-  if dir == "right":
-    loc = loc +1
-  elif dir == "left":
-    if loc == 0:
-      move = False
-    else:
+  if move == False or dir == "none":
+    debug_message("stay still")
+  else:
+    if dir == "right" and loc != maprows-8:
+      loc = loc +1
+    elif dir == "left" and loc != 0:
       loc = loc -1
-  elif dir == "none":
-    move = False
+
   
   for x in range(8):
     for y in range(8):
-      sense.set_pixel(x,y, map[(x+loc)+(y*map1rows)])
+      sense.set_pixel(x,y, map[(x+loc)+(y*maprows)]) # this does the math to get the right Number from the index(creating fake rows and columns)
+
+
+def collision_check(G,P,map,maprows):
+  #get pixel in front of mario
+  global mario_vert
+  global loc
+  next = map[(loc+2)+(mario_vert*maprows)]
+  if next == G or next == P:
+    return False
+  else:
+    return True
   
 """
-def draw_column(col, custom_color = None):
-  debug_message("Drawing column")
-  
-  if custom_color:
-    back_color = custom_color
-  else:
-    back_color = bg_color
-
-  # Construct a list of column color and background color tuples, then set those pixels
-  x, gap_start, gap_size = col
-  c = [col_color] * 8
-  c[gap_start - gap_size: gap_start] = [back_color] * gap_size
-  for y, color in enumerate(c):   
-    sense.set_pixel(x,y,color)
-
 def draw_bird(falling = True):
   debug_message("drawing bird")
   global bird_y, bird_lives, game_over
@@ -142,15 +122,6 @@ def draw_bird(falling = True):
   # Draw bird in new position
   sense.set_pixel(3,bird_y,bird_color)
   debug_message("Bird drawn")
-
-def flash_screen():
-  for i in range(3):
-    custom_color = ([randint(50, x) for x in [255,255,255]])
-    draw_screen(custom_color)
-    # Make sure bird is still visible
-    sense.set_pixel(3,bird_y,bird_color)
-    sleep(.1)
-  draw_screen()
 
 ####
 # Main Game Loop
@@ -221,19 +192,32 @@ while True:
 
 
 map1 = [
-O, O, O, O, O, O, O, O, O,
-O, O, O, O, O, O, O, O, O,
-O, O, O, O, O, O, O, O, O,
-O, O, O, O, O, O, O, O, O,
-O, O, O, O, O, O, O, O, O,
-O, O, O, O, G, G, O, O, O,
-O, O, O, O, O, O, O, O, O,
-G, G, G, G, G, G, G, G, G,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, G, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
+O, O, O, O, G, G, O, O, O, O, O, O, O, G, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
+G, G, G, G, G, G, G, G, G, O, G, G, G, G, G, G, G, G, G,
 ]
-map1rows = 9
+map1rows = 19
 
 draw_map("none",map1,map1rows)
 sense.set_pixel(1,6, mario_color)
 sleep(1)
-draw_map("right",map1,map1rows)
-sense.set_pixel(1,6, mario_color)
+while True:
+  events = sense.stick.get_events()
+  if events:
+    for e in events:
+      debug_message("Processing joystick events")
+      if e.direction ==  right_key and e.action == pressed:
+        # User pressed up: move bird up and columns over
+        debug_message("Joystick right press detected")
+        draw_map("right",map1,map1rows)
+        sense.set_pixel(1,mario_vert, mario_color)
+      elif e.direction ==  left_key and e.action == pressed:
+        # User pressed up: move bird up and columns over
+        debug_message("Joystick left press detected")
+        draw_map("left",map1,map1rows)
+        sense.set_pixel(1,mario_vert, mario_color)
