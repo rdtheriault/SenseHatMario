@@ -22,7 +22,8 @@ mario_lives = 3
 mario_size = 1
 debug_mode = True
 loc = 0                       #beginning location
-jump = 3                      #how high mario can jump
+last_move = "none"
+jump = 2                      #how high mario can jump
 jumpHolder = 0
 mario_vert = 6                #beg vertical (7 is floor)
 jumping = False
@@ -56,6 +57,7 @@ def draw_map(dir,map,maprows):
   global O
   global G
   global P
+  global last_move
   move = collision_check(G,P,map,maprows)
   #debug_message(move)
   #move columns based on direction check if at end/beg
@@ -72,7 +74,9 @@ def draw_map(dir,map,maprows):
       sense.set_pixel(x,y, map[(x+loc)+(y*maprows)]) # this does the math to get the right Number from the index(creating fake rows and columns)
   
   #draw mario
-  jumpMario("none",map,maprows)
+  jumpMario("none", map, maprows, G, P)
+  fallMario(dir, map, maprows, G, P)
+  last_move = dir
   
 def collision_check(G,P,map,maprows):
   #get pixel in front of mario
@@ -84,14 +88,16 @@ def collision_check(G,P,map,maprows):
   else:
     return True
   
-def jumpMario(btn,map,maprows):
+def jumpMario(btn,map,maprows, G, P):
   #debug_message("jump")
   global mario_vert
   global jump
   global jumpHolder
   global jumping
-  under = map[(loc)+((mario_vert+1)*maprows)]
-  debug_message(under)
+  global loc
+  under = map[(loc+1)+((mario_vert+1)*maprows)]
+  #debug_message(under)
+  #if button up and not already jumping and there is something to jump off of
   if jumping == False and btn == "start" and (under == G or under == P):
     debug_message("start jump")
     jumping = True
@@ -105,12 +111,22 @@ def jumpMario(btn,map,maprows):
       jumpHolder = jumpHolder + 1
       mario_vert = mario_vert - 1
       
-def fallMario():
+def fallMario(dir,map,maprows, G, P):
   global jumping
-  if jumping != False:
-    debug_message("falling")
-    
-    
+  global mario_vert
+  global gumba_color
+  global last_move
+  global loc
+  under = map[(loc+1)+((mario_vert+1)*maprows)]
+
+  if jumping == False:
+    #debug_message("falling")
+    if under == G or under == P:
+      debug_message("stop falling")
+    elif under == gumba_color:
+      debug_message("kill gumba")
+    else:
+      mario_vert = mario_vert + 1
   
 def move_gumba():
   debug_message("moving gumba")
@@ -122,8 +138,8 @@ O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
 O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
 O, O, O, O, O, O, O, O, O, O, O, O, O, O, G, O, O, O, O,
 O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
-O, O, O, O, G, G, O, O, O, O, O, O, O, G, O, O, O, O, O,
-O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
+O, O, O, O, G, G, O, O, O, O, O, O, O, G, O, O, O, P, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, P, O,
 G, G, G, G, G, G, G, G, G, O, G, G, G, G, G, G, G, G, G,
 ]
 map1rows = 19
@@ -152,4 +168,5 @@ while True:
         draw_map("left",map1,map1rows)
         sense.set_pixel(1,mario_vert, mario_color)
       elif e.direction ==  up_key and e.action == pressed:
-        jumpMario("start",map1,map1rows)
+        debug_message("Joystick up press detected")
+        jumpMario("start",map1,map1rows,G,P)
