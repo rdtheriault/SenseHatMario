@@ -18,6 +18,10 @@ floor_color = (102, 51, 0 )
 G = floor_color
 pipe_color = (0,255,0)
 P = pipe_color
+castle = (204, 153, 0)
+C = castle
+end = (255, 255, 0)
+E = end
 
 mario_lives = 3
 death = False
@@ -78,6 +82,8 @@ def draw_map(dir,map,maprows):
   if death == True:
     reset()
     mario_lives = mario_lives - 1
+    
+  beatLLevel(map,maprows)
   
 def collision_check(map,maprows):
   #get pixel in front of mario
@@ -109,12 +115,12 @@ def jumpMario(btn,map,maprows):
       mario_vert = mario_vert - 1
       
 def fallMario(dir,map,maprows):
-  global jumping, mario_vert, gumba_color, last_move, loc, death, G, P
+  global jumping, mario_vert, gumba_color, last_move, loc, death, G, P, E
   under = map[(loc+1)+((mario_vert+1)*maprows)]
 
   if jumping == False:
     #debug_message("falling")
-    if under == G or under == P:
+    if under == G or under == P or under == E:
       debug_message("stop falling")
     elif under == gumba_color:
       debug_message("kill gumba")
@@ -135,19 +141,27 @@ def reset():
   jumping = False
   death = False
 
+
+def beatLLevel(map,maprows):
+  global E
+  under = map[(loc+1)+((mario_vert+1)*maprows)]
+  if under == E:
+    sense.show_message("You won")
+    reset()
+
 #### Levels ####
 
 map1 = [
-O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
-O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
-O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
-O, O, O, O, O, O, O, O, O, O, O, O, O, O, G, O, O, O, O, O, O, O, O, O, O, O, O,
-O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
-O, O, O, O, G, G, O, O, O, O, O, O, O, G, O, O, O, P, O, O, O, O, O, O, O, O, O,
-O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, P, O, O, O, O, O, O, O, O, O,
-G, G, G, G, G, G, G, G, G, O, G, G, G, G, G, G, G, G, G, G, O, G, G, G, G, G, G,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, G, O, O, O, O, O, O, O, O, O, O, O, O, O, C, O, C, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, C, C, C, O, O, O, O, O,
+O, O, O, O, G, G, O, O, O, O, O, O, O, G, O, O, O, P, O, O, O, O, O, O, O, O, O, C, C, O, C, C, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, P, O, O, O, O, O, O, O, O, O, C, C, O, C, C, O, O, O, O,
+G, G, G, G, G, G, G, G, G, O, G, G, G, G, G, G, G, G, G, G, O, G, G, G, G, G, G, G, G, E, G, G, G, G, G, G,
 ]
-map1rows = 27
+map1rows = 36
 
 draw_map("none",map1,map1rows)
 sense.set_pixel(1,6, mario_color)
@@ -173,6 +187,6 @@ while True:
         draw_map("left",map1,map1rows)
       elif e.direction ==  up_key and e.action == pressed:
         debug_message("Joystick up press detected")
-        jumpMario("start",map1,map1rows,G,P)
+        jumpMario("start",map1,map1rows)
   sleep(0.1)
   draw_map("none",map1,map1rows)
