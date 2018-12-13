@@ -18,11 +18,12 @@ floor_color = (102, 51, 0 )
 G = floor_color
 pipe_color = (0,255,0)
 P = pipe_color
+
 mario_lives = 3
+death = False
 mario_size = 1
 debug_mode = True
 loc = 0                       #beginning location
-last_move = "none"
 jump = 2                      #how high mario can jump
 jumpHolder = 0
 mario_vert = 6                #beg vertical (7 is floor)
@@ -53,12 +54,8 @@ def debug_message(message):
 
 def draw_map(dir,map,maprows):
   #debug_message("(re)drawing map)")
-  global loc
-  global O
-  global G
-  global P
-  global last_move
-  move = collision_check(G,P,map,maprows)
+  global loc, O, G, P, death, mario_lives
+  move = collision_check(map,maprows)
   #debug_message(move)
   #move columns based on direction check if at end/beg
   if move == False or dir == "none":
@@ -74,11 +71,15 @@ def draw_map(dir,map,maprows):
       sense.set_pixel(x,y, map[(x+loc)+(y*maprows)]) # this does the math to get the right Number from the index(creating fake rows and columns)
   
   #draw mario
-  jumpMario("none", map, maprows, G, P)
-  fallMario(dir, map, maprows, G, P)
-  last_move = dir
+  jumpMario("none", map, maprows)
+  fallMario(dir, map, maprows)
+  sense.set_pixel(1,mario_vert, mario_color)
   
-def collision_check(G,P,map,maprows):
+  if death == True:
+    reset()
+    mario_lives = mario_lives - 1
+  
+def collision_check(map,maprows):
   #get pixel in front of mario
   global mario_vert
   global loc
@@ -88,13 +89,9 @@ def collision_check(G,P,map,maprows):
   else:
     return True
   
-def jumpMario(btn,map,maprows, G, P):
+def jumpMario(btn,map,maprows):
   #debug_message("jump")
-  global mario_vert
-  global jump
-  global jumpHolder
-  global jumping
-  global loc
+  global mario_vert, jump, jumpHolder, jumping, loc, G , P
   under = map[(loc+1)+((mario_vert+1)*maprows)]
   #debug_message(under)
   #if button up and not already jumping and there is something to jump off of
@@ -111,12 +108,8 @@ def jumpMario(btn,map,maprows, G, P):
       jumpHolder = jumpHolder + 1
       mario_vert = mario_vert - 1
       
-def fallMario(dir,map,maprows, G, P):
-  global jumping
-  global mario_vert
-  global gumba_color
-  global last_move
-  global loc
+def fallMario(dir,map,maprows):
+  global jumping, mario_vert, gumba_color, last_move, loc, death, G, P
   under = map[(loc+1)+((mario_vert+1)*maprows)]
 
   if jumping == False:
@@ -127,22 +120,34 @@ def fallMario(dir,map,maprows, G, P):
       debug_message("kill gumba")
     else:
       mario_vert = mario_vert + 1
+      if mario_vert == 7:
+        death = True
   
 def move_gumba():
   debug_message("moving gumba")
 
+def reset():
+  global loc, jump, jumpHolder, mario_vert, jumping, death
+  loc = 0                       #beginning location
+  jump = 2                      #how high mario can jump
+  jumpHolder = 0
+  mario_vert = 6                #beg vertical (7 is floor)
+  jumping = False
+  death = False
+
+#### Levels ####
 
 map1 = [
-O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
-O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
-O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
-O, O, O, O, O, O, O, O, O, O, O, O, O, O, G, O, O, O, O,
-O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
-O, O, O, O, G, G, O, O, O, O, O, O, O, G, O, O, O, P, O,
-O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, P, O,
-G, G, G, G, G, G, G, G, G, O, G, G, G, G, G, G, G, G, G,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, G, O, O, O, O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O,
+O, O, O, O, G, G, O, O, O, O, O, O, O, G, O, O, O, P, O, O, O, O, O, O, O, O, O,
+O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, O, P, O, O, O, O, O, O, O, O, O,
+G, G, G, G, G, G, G, G, G, O, G, G, G, G, G, G, G, G, G, G, O, G, G, G, G, G, G,
 ]
-map1rows = 19
+map1rows = 27
 
 draw_map("none",map1,map1rows)
 sense.set_pixel(1,6, mario_color)
@@ -153,6 +158,7 @@ sleep(1)
 ####
 
 while True:
+  sleep(0.1)
   events = sense.stick.get_events()
   if events:
     for e in events:
@@ -161,12 +167,12 @@ while True:
         # User pressed up: move bird up and columns over
         debug_message("Joystick right press detected")
         draw_map("right",map1,map1rows)
-        sense.set_pixel(1,mario_vert, mario_color)
       elif e.direction ==  left_key and e.action == pressed:
         # User pressed up: move bird up and columns over
         debug_message("Joystick left press detected")
         draw_map("left",map1,map1rows)
-        sense.set_pixel(1,mario_vert, mario_color)
       elif e.direction ==  up_key and e.action == pressed:
         debug_message("Joystick up press detected")
         jumpMario("start",map1,map1rows,G,P)
+  sleep(0.1)
+  draw_map("none",map1,map1rows)
